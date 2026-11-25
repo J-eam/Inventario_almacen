@@ -87,6 +87,39 @@
         </div>
     </div>
 
+    <!-- ═══ CAMBIAR CONTRASEÑA ═══ -->
+    <div class="modal fade" id="pwdModal" tabindex="-1" aria-labelledby="pwdModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="pwdModalTitle"><i class="bi bi-key me-2 text-proesa"></i>Cambiar contraseña</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="pwdAlert" class="alert d-none py-2"></div>
+                    <div class="mb-3">
+                        <label class="form-label" for="pwdActual">Contraseña actual</label>
+                        <input type="password" id="pwdActual" class="form-control" autocomplete="current-password">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="pwdNueva">Contraseña nueva</label>
+                        <input type="password" id="pwdNueva" class="form-control" autocomplete="new-password">
+                        <div class="form-text">Mínimo 6 caracteres.</div>
+                    </div>
+                    <div class="mb-1">
+                        <label class="form-label" for="pwdConfirma">Confirma la contraseña nueva</label>
+                        <input type="password" id="pwdConfirma" class="form-control" autocomplete="new-password"
+                               onkeydown="if(event.key==='Enter')cambiarPassword()">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-proesa" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-proesa" id="pwdBtn" onclick="cambiarPassword()">Guardar contraseña</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>

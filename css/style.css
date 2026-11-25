@@ -387,3 +387,8 @@ h5 { font-size: 1rem; }
     .app-content { padding: 12px; }
     .btn-proesa { padding: .5rem 1rem; }
 }
+
+/* ─── Modales ─── */
+.modal-content { --bs-modal-bg: #fff; background: #fff; border: none; border-radius: var(--proesa-radius-md); box-shadow: var(--proesa-shadow-modal); }
+.modal-header, .modal-footer { border-color: var(--proesa-fog); }
+.modal-title { font-size: 16px; font-weight: 600; }
