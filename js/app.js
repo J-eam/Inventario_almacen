@@ -380,6 +380,9 @@ function renderNav() {
         </div>
         <nav class="sidebar__nav">${navHtml}</nav>
         <div class="sidebar__bottom">
+            <a class="sidebar__item" href="#" onclick="abrirCambioPassword();toggleSidebar(false);return false">
+                <i class="bi bi-key"></i><span>Cambiar contraseña</span>
+            </a>
             <a class="sidebar__item" href="#" onclick="logout();return false">
                 <i class="bi bi-box-arrow-right"></i><span>Cerrar sesión</span>
             </a>
@@ -411,6 +414,62 @@ function setActiveNav(fn) {
 
 function toggleSidebar(open) {
     document.getElementById('appView').classList.toggle('sidebar-open', open);
+}
+
+// ═══════════════════════════════
+//  CAMBIAR CONTRASEÑA (cada usuario cambia la suya)
+// ═══════════════════════════════
+
+function abrirCambioPassword() {
+    ['pwdActual', 'pwdNueva', 'pwdConfirma'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('pwdAlert').className = 'alert d-none py-2';
+    const btn = document.getElementById('pwdBtn');
+    btn.disabled = false;
+    btn.textContent = 'Guardar contraseña';
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('pwdModal')).show();
+}
+
+function mostrarErrorPassword(msg) {
+    const a = document.getElementById('pwdAlert');
+    a.textContent = msg;
+    a.className = 'alert alert-danger py-2';
+}
+
+async function cambiarPassword() {
+    const actual   = document.getElementById('pwdActual').value;
+    const nueva    = document.getElementById('pwdNueva').value;
+    const confirma = document.getElementById('pwdConfirma').value;
+
+    if (!actual || !nueva || !confirma) return mostrarErrorPassword('Completa los tres campos.');
+    if (nueva.length < 6) return mostrarErrorPassword('La contraseña nueva debe tener mínimo 6 caracteres.');
+    if (nueva !== confirma) return mostrarErrorPassword('La contraseña nueva y la confirmación no coinciden.');
+    if (nueva === actual) return mostrarErrorPassword('La contraseña nueva debe ser distinta a la actual.');
+
+    const btn = document.getElementById('pwdBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Guardando...';
+
+    try {
+        const user = auth.currentUser;
+        const cred = firebase.auth.EmailAuthProvider.credential(user.email, actual);
+        await user.reauthenticateWithCredential(cred);
+        await user.updatePassword(nueva);
+        bootstrap.Modal.getInstance(document.getElementById('pwdModal')).hide();
+        showAlert('Tu contraseña se cambió. Úsala la próxima vez que inicies sesión.', 'success');
+    } catch (e) {
+        const codigo = e.code || '';
+        if (codigo.includes('wrong-password') || codigo.includes('invalid-credential') || codigo.includes('invalid-login-credentials')) {
+            mostrarErrorPassword('Tu contraseña actual no es correcta.');
+        } else if (codigo.includes('too-many-requests')) {
+            mostrarErrorPassword('Demasiados intentos. Espera unos minutos y vuelve a intentar.');
+        } else if (codigo.includes('weak-password')) {
+            mostrarErrorPassword('La contraseña nueva es muy débil. Usa una más larga.');
+        } else {
+            mostrarErrorPassword('No se pudo cambiar la contraseña. Intenta de nuevo.');
+        }
+        btn.disabled = false;
+        btn.textContent = 'Guardar contraseña';
+    }
 }
 
 // ═══════════════════════════════
