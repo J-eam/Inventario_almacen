@@ -196,7 +196,7 @@ async function login() {
     const btn       = document.getElementById('loginBtn');
 
     if (!userInput || !pass) {
-        alert.textContent = 'Ingresa usuario y contrasena';
+        alert.textContent = 'Ingresa usuario y contraseña';
         alert.classList.remove('d-none');
         return;
     }
@@ -216,10 +216,10 @@ async function login() {
             }
         }
     } catch (e) {
-        alert.textContent = 'Usuario o contrasena incorrectos';
+        alert.textContent = 'Usuario o contraseña incorrectos';
         alert.classList.remove('d-none');
         btn.disabled = false;
-        btn.textContent = 'Iniciar Sesion';
+        btn.textContent = 'Iniciar sesión';
     }
 }
 
@@ -234,7 +234,7 @@ function showLogin() {
     document.getElementById('loginPass').value = '';
     document.getElementById('loginAlert').classList.add('d-none');
     document.getElementById('loginBtn').disabled = false;
-    document.getElementById('loginBtn').textContent = 'Iniciar Sesion';
+    document.getElementById('loginBtn').textContent = 'Iniciar sesión';
 }
 
 async function showApp() {
@@ -281,7 +281,7 @@ async function setupAdmin() {
     const alert  = document.getElementById('loginAlert');
 
     if (!nombre || !user || pass.length < 6) {
-        alert.textContent = 'Completa todos los campos (contrasena min 6 caracteres)';
+        alert.textContent = 'Completa todos los campos (contraseña de mínimo 6 caracteres)';
         alert.classList.remove('d-none');
         return;
     }
@@ -339,57 +339,78 @@ async function cargarDatosIniciales() {
 //  NAVIGATION
 // ═══════════════════════════════
 
+// Menú lateral con el patrón del sistema de diseño PROESA (secciones con título, roles por item)
+const NAV_SECTIONS = [
+    { title: 'Pedidos', items: [
+        { fn: 'showNuevoPedido', icon: 'bi-cart-plus', label: 'Nuevo pedido' },
+        { fn: 'showMisPedidos', icon: 'bi-list-check', label: 'Mis pedidos' },
+        { fn: 'showAprobar', icon: 'bi-check2-square', label: 'Aprobar', roles: ['lider'] }
+    ]},
+    { title: 'Administración', items: [
+        { fn: 'showAdminPedidos', icon: 'bi-clipboard-data', label: 'Pedidos', roles: ['admin'] },
+        { fn: 'showExportar', icon: 'bi-file-earmark-excel', label: 'Exportar', roles: ['admin'] },
+        { fn: 'showHistorial', icon: 'bi-bar-chart-line', label: 'Historial', roles: ['admin'] },
+        { fn: 'showCatalogo', icon: 'bi-box-seam', label: 'Catálogo', roles: ['admin'] },
+        { fn: 'showAreas', icon: 'bi-diagram-3', label: 'Áreas', roles: ['admin'] },
+        { fn: 'showUsuarios', icon: 'bi-people', label: 'Usuarios', roles: ['admin'] }
+    ]}
+];
+
+const ROL_LABEL = { admin: 'Administrador', lider: 'Líder', usuario: 'Usuario' };
+
 function renderNav() {
-    const nav = document.getElementById('mainNav');
     const role = currentUser.rol;
-    let links = '';
+    const sections = NAV_SECTIONS
+        .map(s => ({ ...s, items: s.items.filter(i => !i.roles || i.roles.includes(role)) }))
+        .filter(s => s.items.length > 0);
 
-    // Todos pueden pedir material
-    links += navLink('showNuevoPedido', 'bi-cart-plus', 'Nuevo Pedido');
-    links += navLink('showMisPedidos', 'bi-list-check', 'Mis Pedidos');
+    const navHtml = sections.map((s, idx) => `
+        ${idx > 0 ? '<div class="sidebar__divider"></div>' : ''}
+        <p class="sidebar__eyebrow">${s.title}</p>
+        ${s.items.map(i => navLink(i.fn, i.icon, i.label)).join('')}
+    `).join('');
 
-    if (role === 'lider') {
-        links += navLink('showAprobar', 'bi-check2-square', 'Aprobar');
-    }
-    if (role === 'admin') {
-        links += navLink('showAdminPedidos', 'bi-clipboard-data', 'Pedidos');
-        links += navLink('showExportar', 'bi-file-earmark-excel', 'Exportar');
-        links += navLink('showHistorial', 'bi-bar-chart-line', 'Historial');
-        links += navLink('showCatalogo', 'bi-box-seam', 'Catalogo');
-        links += navLink('showAreas', 'bi-diagram-3', 'Areas');
-        links += navLink('showUsuarios', 'bi-people', 'Usuarios');
-    }
-
-    nav.innerHTML = `
-        <div class="container-fluid">
-            <span class="navbar-brand"><i class="bi bi-building me-2"></i>PROESA</span>
-            <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navMenu">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navMenu">
-                <ul class="navbar-nav me-auto">${links}</ul>
-                <span class="navbar-text text-white me-3">
-                    <i class="bi bi-person-circle me-1"></i>${currentUser.nombre}
-                    <small class="ms-1 opacity-75">(${role})</small>
-                </span>
-                <button class="btn btn-outline-light btn-sm" onclick="logout()">
-                    <i class="bi bi-box-arrow-right me-1"></i>Salir
-                </button>
+    document.getElementById('sidebar').innerHTML = `
+        <div class="sidebar__brand">
+            <div class="brand-mark"><i class="bi bi-boxes"></i></div>
+            <div>
+                <p class="sidebar__app">Inventario</p>
+                <p class="sidebar__org">PROESA</p>
             </div>
+        </div>
+        <nav class="sidebar__nav">${navHtml}</nav>
+        <div class="sidebar__bottom">
+            <a class="sidebar__item" href="#" onclick="logout();return false">
+                <i class="bi bi-box-arrow-right"></i><span>Cerrar sesión</span>
+            </a>
+            <p class="sidebar__footer">${currentUser.nombre}<br>PROESA · Inventario</p>
         </div>`;
+
+    const iniciales = (currentUser.nombre || '?').split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase();
+    document.getElementById('headerUser').innerHTML = `
+        <div class="text-end d-none d-sm-block">
+            <div class="app-header__name">${currentUser.nombre}</div>
+            <div class="app-header__role">${ROL_LABEL[role] || role}</div>
+        </div>
+        <div class="user-avatar">${iniciales}</div>`;
 }
 
 function navLink(fn, icon, label) {
-    return `<li class="nav-item">
-        <a class="nav-link" href="#" onclick="${fn}();return false" data-view="${fn}">
-            <i class="bi ${icon} me-1"></i>${label}
-        </a></li>`;
+    return `<a class="sidebar__item" href="#" onclick="${fn}();toggleSidebar(false);return false" data-view="${fn}" data-label="${label}">
+            <i class="bi ${icon}"></i><span>${label}</span>
+        </a>`;
 }
 
 function setActiveNav(fn) {
-    document.querySelectorAll('#mainNav .nav-link').forEach(a => {
-        a.classList.toggle('active', a.dataset.view === fn);
+    document.querySelectorAll('#sidebar .sidebar__item[data-view]').forEach(a => {
+        const active = a.dataset.view === fn;
+        a.classList.toggle('active', active);
+        if (active) document.getElementById('headerTitle').textContent = a.dataset.label;
     });
+}
+
+function toggleSidebar(open) {
+    document.getElementById('appView').classList.toggle('sidebar-open', open);
 }
 
 // ═══════════════════════════════
@@ -735,7 +756,7 @@ async function showMisPedidos() {
 
     main.innerHTML = `
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0"><i class="bi bi-list-check me-2 text-proesa"></i>Mis Pedidos</h5>
+            <h5 class="mb-0"><i class="bi bi-list-check me-2 text-proesa"></i>Mis pedidos</h5>
             <button class="btn btn-proesa btn-sm" onclick="showNuevoPedido()">
                 <i class="bi bi-plus-lg me-1"></i>Nuevo
             </button>
@@ -810,7 +831,7 @@ async function showAprobar() {
     });
 
     main.innerHTML = `
-        <h5 class="mb-3"><i class="bi bi-check2-square me-2 text-proesa"></i>Pedidos por Aprobar - ${currentUser.area}</h5>
+        <h5 class="mb-3"><i class="bi bi-check2-square me-2 text-proesa"></i>Pedidos por aprobar · ${currentUser.area}</h5>
         <div class="row">${cards}</div>`;
 }
 
@@ -906,7 +927,7 @@ async function showAdminPedidos(filtro) {
 
     if (adminPedidos.length === 0) {
         main.innerHTML = `
-            <h5 class="mb-3"><i class="bi bi-clipboard-data me-2 text-proesa"></i>Gestion de Pedidos</h5>
+            <h5 class="mb-3"><i class="bi bi-clipboard-data me-2 text-proesa"></i>Gestión de pedidos</h5>
             <div class="filter-tabs d-flex flex-wrap gap-2 mb-3">${filterBtns}</div>
             <div class="empty-state"><i class="bi bi-inbox"></i><h5>Sin pedidos</h5></div>`;
         return;
@@ -948,7 +969,7 @@ async function showAdminPedidos(filtro) {
     });
 
     main.innerHTML = `
-        <h5 class="mb-3"><i class="bi bi-clipboard-data me-2 text-proesa"></i>Gestion de Pedidos</h5>
+        <h5 class="mb-3"><i class="bi bi-clipboard-data me-2 text-proesa"></i>Gestión de pedidos</h5>
         <div class="filter-tabs d-flex flex-wrap gap-2 mb-3">${filterBtns}</div>
         <div class="card card-proesa">
             <div class="table-responsive">
@@ -1320,7 +1341,7 @@ async function showHistorial() {
     }
 
     main.innerHTML = `
-        <h5 class="mb-3"><i class="bi bi-bar-chart-line me-2 text-proesa"></i>Historial por Area</h5>
+        <h5 class="mb-3"><i class="bi bi-bar-chart-line me-2 text-proesa"></i>Historial por área</h5>
         ${kpis}
         <div class="row">${areaCards}</div>
         ${topGlobal.length > 0 ? `
@@ -1409,7 +1430,7 @@ async function showCatalogo() {
 
     main.innerHTML = `
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0"><i class="bi bi-box-seam me-2 text-proesa"></i>Catalogo de Productos</h5>
+            <h5 class="mb-0"><i class="bi bi-box-seam me-2 text-proesa"></i>Catálogo de productos</h5>
             <div class="d-flex gap-2">
 <button class="btn btn-outline-proesa btn-sm" onclick="exportarCatalogo()">
                     <i class="bi bi-file-earmark-excel me-1"></i>Exportar
@@ -1662,7 +1683,7 @@ async function showUsuarios() {
 
     main.innerHTML = `
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0"><i class="bi bi-people me-2 text-proesa"></i>Usuarios del Sistema</h5>
+            <h5 class="mb-0"><i class="bi bi-people me-2 text-proesa"></i>Usuarios del sistema</h5>
             <button class="btn btn-proesa btn-sm" onclick="toggleUserForm()">
                 <i class="bi bi-person-plus me-1"></i>Nuevo Usuario
             </button>
@@ -1690,7 +1711,7 @@ async function showUsuarios() {
                         <div class="col-md-2">
                             <label class="form-label small fw-bold">Rol</label>
                             <select id="newUserRol" class="form-select form-select-sm">
-                                <option value="lider">Lider de Area</option>
+                                <option value="lider">Líder de área</option>
                                 <option value="admin">Admin</option>
                             </select>
                         </div>
@@ -1722,7 +1743,7 @@ async function crearUsuario() {
     const area   = document.getElementById('newUserArea').value;
 
     if (!nombre || !user || pass.length < 6) {
-        showAlert('Completa todos los campos (contrasena min 6 caracteres)', 'warning');
+        showAlert('Completa todos los campos (contraseña de mínimo 6 caracteres)', 'warning');
         return;
     }
 
